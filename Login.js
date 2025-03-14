@@ -10,12 +10,12 @@ const Login = ({ login }) => {
   const formik = useFormik({
     initialValues: { username: "", password: "" },
     validate: (values) => {
-      let errors = {};
-      if (!values.username.trim()) {
-        errors.username = "Username is required"; // ✅ Check if empty
+      const errors = {};
+      if (!values.username) {
+        errors.username = "Please enter Username"; 
       }
-      if (!values.password.trim()) {
-        errors.password = "Password is required"; // ✅ Check if empty
+      if (!values.password) {
+        errors.password = "Please enter Password"; 
       }
       return errors;
     },
@@ -23,22 +23,20 @@ const Login = ({ login }) => {
       fetch("https://localhost:7038/api/Login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ username: values.username, password: values.password }),
       })
         .then((response) => {
-          return response.json().then((data) => {
-            if (!response.ok) {
-              throw new Error(data.message || "Invalid credentials");
-            }
-            return data;
-          });
+          if (!response.ok) {
+            throw new Error("Invalid credentials");
+          }
+          return response.text();
         })
         .then((data) => {
-          const token = data.token;
+          const token = data;
           if (token) {
-            localStorage.setItem("authToken", token);
+            localStorage.setItem("auth Token", token);
             login(true);
-            navigate("/dashboard");
+            navigate("/Navbar");
           } else {
             throw new Error("Token not received");
           }
@@ -55,6 +53,7 @@ const Login = ({ login }) => {
       <div className="login-container">
         <h1 className="login-heading">Welcome to Login page</h1>
         <p className="para">Please enter your login details</p>
+        
         <form className="login-form" onSubmit={formik.handleSubmit}>
           <div className="input-group">
             <label>Username</label>
@@ -63,11 +62,9 @@ const Login = ({ login }) => {
               name="username"
               value={formik.values.username}
               onChange={formik.handleChange}
-              onBlur={formik.handleBlur} // ✅ Prevents instant error display
             />
-            {formik.touched.username && formik.errors.username && (
-              <div className="error">{formik.errors.username}</div>
-            )}
+            {formik.errors.username && <div className="error">{formik.errors.username}</div>} 
+           
           </div>
 
           <div className="input-group">
@@ -77,18 +74,15 @@ const Login = ({ login }) => {
               name="password"
               value={formik.values.password}
               onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
             />
-            {formik.touched.password && formik.errors.password && (
-              <div className="error">{formik.errors.password}</div>
-            )}
+            {formik.errors.password && <div className="error">{formik.errors.password}</div>} 
+           
           </div>
 
-          <button type="submit" className="login-button" disabled={!formik.isValid || formik.isSubmitting}>
-            Login
-          </button>
-          <span className="error-message">{errorMessage}</span>
+          <button type="submit" className="login-button">Login</button>
+          {errorMessage && <span className="error-message">{errorMessage}</span>}
         </form>
+        
         <p>
           Don't have an account?{" "}
           <span className="signup-link" onClick={() => navigate("/signup")}>
@@ -101,4 +95,3 @@ const Login = ({ login }) => {
 };
 
 export default Login;
-
